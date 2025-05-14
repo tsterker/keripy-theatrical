@@ -15,20 +15,31 @@ def apply_patches():
     # monkey_patch_notifier()
     # monkey_patch_poster()
 
-    instrumented_modules = [
-        'keri.app.agenting',
-        'keri.app.notifying',
-        'keri.app.forwarding',
+    namespaces = [
+        'keri.app',
     ]
 
-    for module in instrumented_modules:
-        add_tracing_to_module(importlib.import_module(module))
+    # @see https://packaging.python.org/en/latest/guides/creating-and-discovering-plugins/#using-namespace-packages
+    def iter_namespace(ns_pkg):
+        import pkgutil
 
-    # patch('keri.app.agenting.HTTPMessenger.responseDo')
-    # patch('keri.app.agenting.HTTPMessenger.responseDo', append=False, callback=lambda self, *args, **kwargs: (
-    #     dump_caller(),
-    #     dump_call_stack(),
-    # ))
+        # Specifying the second argument (prefix) to iter_modules makes the
+        # returned name an absolute name instead of a relative one. This allows
+        # import_module to work without having to do additional modification to
+        # the name.
+
+        # Get all submodules, recursively
+        return pkgutil.walk_packages(ns_pkg.__path__, ns_pkg.__name__ + ".")
+
+        # Get all direct submodules
+        # return pkgutil.iter_modules(ns_pkg.__path__, ns_pkg.__name__ + ".")
+
+    for namespace in namespaces:
+        discovered_modules = [ name for finder, name, ispkg in iter_namespace(importlib.import_module(namespace)) ]
+        print_purple(str(discovered_modules))
+
+        for module in discovered_modules:
+            add_tracing_to_module(importlib.import_module(module))
 
 def patch(fqn, callback=None, append=False):
     module, cls_name, method_name = fqn.rsplit('.', 2)
@@ -88,7 +99,11 @@ def add_tracing_to_class(cls):
         # wrap the original method
         def make_wrapper(method_name, orig_method):
             def wrapper(*args, **kwargs):
-                print_dim(f"[TRACE] {cls.__module__}.{cls.__name__}.{method_name} called")
+                import inspect
+                frame = inspect.currentframe().f_back
+                file_name = frame.f_code.co_filename
+                line_number = frame.f_lineno
+                print_dim(f"[TRACE] {cls.__module__}.{cls.__name__}.{method_name} called from {file_name}:{line_number}")
                 return orig_method(*args, **kwargs)
             # preserve introspection hints
             wrapper.__name__ = orig_method.__name__

@@ -8,11 +8,13 @@ def is_patched(module):
 def mark_patched(module):
     setattr(module, THEATRICAL_PATCH_MARKER, True)
 
+def init():
+    register_global_error_handler()
+    apply_patches()
+
 def apply_patches():
     import importlib
     import pkgutil
-
-    register_global_error_handler()
 
     # Dynamically load all modules from the `patchers` namespace
     package = importlib.import_module('.patchers', __package__)
