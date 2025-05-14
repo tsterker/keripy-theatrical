@@ -1,7 +1,12 @@
 [project]
 name = "keripy-theatrical"
 version = "0.1.1"
-description = "Add your description here"
+description = "Monkey-patches for keripy to make it more verbose and theatrical when it comes to unexpected things."
+authors = [
+  { name="Tim Sterker", email="tim.sterker@gleif.org" },
+]
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "keri>=1.1.17",
+]
