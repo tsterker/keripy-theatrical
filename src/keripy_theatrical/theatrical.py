@@ -1,3 +1,6 @@
+import importlib
+import pkgutil
+
 import keripy_theatrical.utils as utils
 
 THEATRICAL_PATCH_MARKER = "THEATRICAL_PATCHED"
@@ -10,11 +13,10 @@ def mark_patched(module):
 
 def init():
     register_global_error_handler()
+    add_tracing()
     apply_patches()
 
 def apply_patches():
-    import importlib
-    import pkgutil
 
     # Dynamically load all modules from the `patchers` namespace
     package = importlib.import_module('.patchers', __package__)
@@ -111,3 +113,109 @@ def register_global_error_handler():
         return trace_exceptions
 
     sys.settrace(trace_exceptions)
+
+
+def add_tracing():
+    namespaces = [
+        'keri.app',
+    ]
+
+    namespace_exclude_list = [
+        'keri.app.oobiing',
+        # 'keri.app.oobiing.Oobiery.scoobiDo',
+    ]
+
+    # @see https://packaging.python.org/en/latest/guides/creating-and-discovering-plugins/#using-namespace-packages
+    def iter_namespace(ns_pkg):
+        import pkgutil
+
+        # Specifying the second argument (prefix) to iter_modules makes the
+        # returned name an absolute name instead of a relative one. This allows
+        # import_module to work without having to do additional modification to
+        # the name.
+
+        # Get all submodules, recursively
+        return pkgutil.walk_packages(ns_pkg.__path__, ns_pkg.__name__ + ".")
+
+        # Get all direct submodules
+        # return pkgutil.iter_modules(ns_pkg.__path__, ns_pkg.__name__ + ".")
+
+    for namespace in namespaces:
+        discovered_modules = [ name for finder, name, ispkg in iter_namespace(importlib.import_module(namespace)) ]
+        utils.print_purple(str(discovered_modules))
+
+        for module in discovered_modules:
+            if module in namespace_exclude_list:
+                continue
+            add_tracing_to_module(importlib.import_module(module))
+
+def patch(fqn, callback=None, append=False):
+    module, cls_name, method_name = fqn.rsplit('.', 2)
+    cls = getattr(importlib.import_module(module), cls_name)
+    method = getattr(cls, method_name)
+    # add_tracing_to_class(cls)
+
+    def cb(*args, **kwargs):
+        if callback:
+            callback(*args, **kwargs)
+        else:
+            utils.print_dim(f"[PATCH] {cls.__module__}.{cls.__name__}.{method_name} called with args: {args} and kwargs: {kwargs}")
+
+    def wrapper(*args, **kwargs):
+        if not append:
+            cb(*args, **kwargs)
+            return method(*args, **kwargs)
+        else:
+            result = method(*args, **kwargs)
+            cb(*args, **kwargs)
+            return result
+
+    setattr(cls, method_name, wrapper)
+
+
+def add_tracing_to_module(module, exclude_list=None):
+    import inspect
+    if exclude_list is None:
+        exclude_list = []
+    for name, obj in inspect.getmembers(module):
+
+        # Allow for explicit exclusion
+        fqcn = f"{module.__name__}.{name}"
+        if fqcn in exclude_list:
+            continue
+
+        # Only consider classes and functions
+        if not inspect.isclass(obj) and not inspect.isfunction(obj):
+            continue
+
+        # Only consider objects defined within the module
+        if obj.__module__ != module.__name__:
+            continue
+
+        add_tracing_to_class(obj)
+
+def add_tracing_to_class(cls):
+    for name, attr in list(vars(cls).items()):
+        if not callable(attr): # skip non-callables
+            continue
+
+        if name.startswith("__"): # skip dunder methods
+            continue
+
+        # utils.print_green(f"{cls.__module__}.{cls.__name__}.{name}")
+
+        # wrap the original method
+        def make_wrapper(method_name, orig_method):
+            def wrapper(*args, **kwargs):
+                import inspect
+                frame = inspect.currentframe().f_back
+                file_name = frame.f_code.co_filename
+                line_number = frame.f_lineno
+                utils.print_dim(f"[TRACE] {cls.__module__}.{cls.__name__}.{method_name} called from {file_name}:{line_number}")
+                return orig_method(*args, **kwargs)
+            # preserve introspection hints
+            wrapper.__name__ = orig_method.__name__
+            wrapper.__doc__  = orig_method.__doc__
+            return wrapper
+
+        setattr(cls, name, make_wrapper(name, attr))
