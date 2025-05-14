@@ -142,7 +142,7 @@ def add_tracing():
 
     for namespace in namespaces:
         discovered_modules = [ name for finder, name, ispkg in iter_namespace(importlib.import_module(namespace)) ]
-        utils.print_purple(str(discovered_modules))
+        # utils.print_purple(str(discovered_modules))
 
         for module in discovered_modules:
             if module in namespace_exclude_list:
