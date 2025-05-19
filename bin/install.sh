@@ -21,8 +21,13 @@ ensure_keripy_theatrical () {
     set +o pipefail
 
     print_info "Ensure keripy-theatrical is installed and initialized..."
-    pip list --editable | grep $KERI_THEATRICAL_PATH || pip install -e "$KERI_THEATRICAL_PATH"
+    python -m pip list --editable | grep $KERI_THEATRICAL_PATH || python -m pip install -e "$KERI_THEATRICAL_PATH"
     python -m keripy_theatrical.install
+}
+
+patch_kli () {
+    KLI_PATH=$(which kli)
+    sed -i '' 's/^import sys$/import sys, sitecustomize, usercustomize/' "$KLI_PATH"
 }
 
 # Main
@@ -33,3 +38,4 @@ if [ ! -d "$KERI_THEATRICAL_PATH" ]; then
 fi
 
 ensure_keripy_theatrical
+patch_kli
