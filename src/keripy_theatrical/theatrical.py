@@ -13,7 +13,16 @@ def mark_patched(module):
 
 def init():
     register_global_error_handler()
-    add_tracing()
+    add_tracing(
+        namespaces=[
+            'keri.app',
+            # 'keri.db',
+        ],
+        namespace_exclude_list=[
+            'keri.app.oobiing',
+            # 'keri.app.oobiing.Oobiery.scoobiDo',
+        ]
+    )
     apply_patches()
 
 def apply_patches():
@@ -115,15 +124,7 @@ def register_global_error_handler():
     sys.settrace(trace_exceptions)
 
 
-def add_tracing():
-    namespaces = [
-        'keri.app',
-    ]
-
-    namespace_exclude_list = [
-        'keri.app.oobiing',
-        # 'keri.app.oobiing.Oobiery.scoobiDo',
-    ]
+def add_tracing(namespaces=None, namespace_exclude_list=None):
 
     # @see https://packaging.python.org/en/latest/guides/creating-and-discovering-plugins/#using-namespace-packages
     def iter_namespace(ns_pkg):
@@ -149,6 +150,38 @@ def add_tracing():
                 continue
             add_tracing_to_module(importlib.import_module(module))
 
+def tap(fqn, callback=None, append=False):
+    module, cls_name, method_name = fqn.rsplit('.', 2)
+    cls = getattr(importlib.import_module(module), cls_name)
+    method = getattr(cls, method_name)
+
+    def tap_generator(gen):
+        for item in gen:
+            utils.print_red(f"[ => Item: {item}")
+            yield item
+
+
+    def tapper(*args, **kwargs):
+        # utils.print_dim(f"[TAP] {cls.__module__}.{cls.__name__}.{method_name} called with args: {args} and kwargs: {kwargs}")
+        utils.print_red(f"[TAP] {cls.__module__}.{cls.__name__}.{method_name}")
+        utils.print_red(f"[ => args: {args}")
+        utils.print_red(f"[ => kwargs: {kwargs}")
+
+
+        result = method(*args, **kwargs)
+
+        import types
+        if isinstance(result, types.GeneratorType):
+            utils.print_red(f"[ => RETURNED GENERATOR ITEMS...")
+            return tap_generator(result)
+        else:
+            utils.print_red(f"[ => RETURNED: {result}")
+
+        return result
+
+    setattr(cls, method_name, tapper)
+    return method
+
 def patch(fqn, callback=None, append=False):
     module, cls_name, method_name = fqn.rsplit('.', 2)
     cls = getattr(importlib.import_module(module), cls_name)
@@ -156,10 +189,11 @@ def patch(fqn, callback=None, append=False):
     # add_tracing_to_class(cls)
 
     def cb(*args, **kwargs):
+        utils.print_dim(f"[PATCH] {cls.__module__}.{cls.__name__}.{method_name} called with args: {args} and kwargs: {kwargs}")
         if callback:
             callback(*args, **kwargs)
-        else:
-            utils.print_dim(f"[PATCH] {cls.__module__}.{cls.__name__}.{method_name} called with args: {args} and kwargs: {kwargs}")
+        # else:
+        #     utils.print_dim(f"[PATCH] {cls.__module__}.{cls.__name__}.{method_name} called with args: {args} and kwargs: {kwargs}")
 
     def wrapper(*args, **kwargs):
         if not append:
@@ -167,7 +201,7 @@ def patch(fqn, callback=None, append=False):
             return method(*args, **kwargs)
         else:
             result = method(*args, **kwargs)
-            cb(*args, **kwargs)
+            cb(*args, **kwargs, _result=result)
             return result
 
     setattr(cls, method_name, wrapper)
@@ -211,7 +245,7 @@ def add_tracing_to_class(cls):
                 frame = inspect.currentframe().f_back
                 file_name = frame.f_code.co_filename
                 line_number = frame.f_lineno
-                utils.print_dim(f"[TRACE] {cls.__module__}.{cls.__name__}.{method_name} called from {file_name}:{line_number}")
+                utils.print_dim(f"[TRACE] {cls.__module__}.{cls.__name__}.{method_name} called with args: {args} and kwargs: {kwargs} from {file_name}:{line_number}")
                 return orig_method(*args, **kwargs)
             # preserve introspection hints
             wrapper.__name__ = orig_method.__name__
