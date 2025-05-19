@@ -4,7 +4,8 @@ set -ueEo pipefail
 
 # Config
 ############################################################################################
-KERI_THEATRICAL_PATH="${KERI_THEATRICAL_PATH:?\e[31mMissing KERI_THEATRICAL_PATH\e[0m}"
+DEFAULT_KERI_THEATRICAL_PATH=$(dirname $(dirname ${BASH_SOURCE[0]}))
+KERI_THEATRICAL_PATH="${KERI_THEATRICAL_PATH:-$DEFAULT_KERI_THEATRICAL_PATH}"
 
 # Helpers
 ############################################################################################
