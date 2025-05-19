@@ -14,6 +14,10 @@ def apply_patches():
 
     import itertools
 
+    tap('keri.app.habbing.Habery.loadHabs')
+    # tap('keri.app.agenting.HTTPStreamMessenger.recur')
+    # tap('keri.app.configing.Configer.get')
+    # tap('keri.app.habbing.Habery.habByName')
     # tap('keri.db.koming.KomerBase.getItemIter')
 
     # def dump_generator_non_destructive(generator):

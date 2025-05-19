@@ -150,7 +150,7 @@ def add_tracing(namespaces=None, namespace_exclude_list=None):
                 continue
             add_tracing_to_module(importlib.import_module(module))
 
-def tap(fqn, callback=None, append=False):
+def tap(fqn, print_args_before_call=True):
     module, cls_name, method_name = fqn.rsplit('.', 2)
     cls = getattr(importlib.import_module(module), cls_name)
     method = getattr(cls, method_name)
@@ -163,19 +163,25 @@ def tap(fqn, callback=None, append=False):
 
     def tapper(*args, **kwargs):
         # utils.print_dim(f"[TAP] {cls.__module__}.{cls.__name__}.{method_name} called with args: {args} and kwargs: {kwargs}")
-        utils.print_red(f"[TAP] {cls.__module__}.{cls.__name__}.{method_name}")
-        utils.print_red(f"[ => args: {args}")
-        utils.print_red(f"[ => kwargs: {kwargs}")
 
+        tap_prefix = f"[TAP] {cls.__module__}.{cls.__name__}.{method_name}"
 
-        result = method(*args, **kwargs)
+        if not print_args_before_call:
+            result = method(*args, **kwargs)
+
+        utils.print_red(f"{tap_prefix}")
+        utils.print_red(f"{tap_prefix} => args: {args}")
+        utils.print_red(f"{tap_prefix} => kwargs: {kwargs}")
+
+        if print_args_before_call:
+            result = method(*args, **kwargs)
 
         import types
         if isinstance(result, types.GeneratorType):
-            utils.print_red(f"[ => RETURNED GENERATOR ITEMS...")
+            utils.print_red(f"{tap_prefix} => RETURNED GENERATOR ITEMS...")
             return tap_generator(result)
         else:
-            utils.print_red(f"[ => RETURNED: {result}")
+            utils.print_red(f"{tap_prefix} => RETURNED: {result}")
 
         return result
 
