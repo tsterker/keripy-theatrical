@@ -10,7 +10,7 @@ Note that the host project does not need to be the `keripy` package itself, but 
 
 In order to use this package, you need install it into an existing project that uses `keripy`.
 
-Installation is currently done by checking out this `keripy-theatrical` repo and running the install script from within your target project.
+Installation is currently done by checking out this `keripy-theatrical` repo and running the [./bin/install.sh](bin/install.sh) script from within your target project.
 
 **Example:**
 ```bash
