@@ -31,3 +31,18 @@ uv run bash $THEATRICAL_PATH/bin/install.sh
 uv run kli init --name foo --nopasscode
 uv run kli ipex grant --name=foo --alias=foo --said=foo --recipient=foo
 ```
+
+## Usage
+
+Generally, the keripy-theatrical package is currently expected to be cloned and then manually edited as needed, as you debug/trace/monkey-patch the KERI project you're using.
+
+There is no clear structure for how things are set up and (dead) code is currently added as needed during my mostly clueless explorations.
+
+Some general pointers:
+
+- Check the [theatrical.init](src/keripy_theatrical/theatrical.py) to see which namespaces are currently traced and/or "tapped".
+- Check the [keripy patcher](src/keripy_theatrical/patchers/keripy.py) to see some more involved/specialized monkey-patching.
+- Note note all keripy-theatrical output is sent to STDERR to not interfere with any STDOUT that the patched code might produce and/or rely on. If you want to grep the theatrical output make sure to redirect STDERR to STDOUT like so:
+  ```bash
+  uv run kli init --name bar --nopasscode 2>&1 | rg configing
+  ```
