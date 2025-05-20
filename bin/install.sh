@@ -28,7 +28,11 @@ ensure_keripy_theatrical () {
 
 patch_kli () {
     KLI_PATH=$(which kli)
-    sed -i '' 's/^import sys$/import sys, sitecustomize, usercustomize/' "$KLI_PATH"
+
+    sed 's/^import sys$/import sys, sitecustomize, usercustomize/' "$KLI_PATH" > "$KLI_PATH.patched"
+    mv "$KLI_PATH" "$KLI_PATH.bak"
+    mv "$KLI_PATH.patched" "$KLI_PATH"
+    chmod +x "$KLI_PATH"
 }
 
 # Main
