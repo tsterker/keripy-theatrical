@@ -12,53 +12,6 @@ def apply_patches():
     print_purple("Applying patches")
     monkey_patch_http_stream_messenger()
 
-    import itertools
-
-    tap('keri.app.habbing.Habery.loadHabs')
-    # tap('keri.app.agenting.HTTPStreamMessenger.recur')
-    # tap('keri.app.configing.Configer.get')
-    # tap('keri.app.habbing.Habery.habByName')
-    # tap('keri.db.koming.KomerBase.getItemIter')
-
-    # def dump_generator_non_destructive(generator):
-    #     """ TODO: THis currently messes with the original iterator"""
-    #     orig = generator
-    #     debug_iter, live_iter = itertools.tee(orig)
-
-    #     # # 1) consume the debug copy
-    #     # debug_list = list(debug_iter)
-    #     # print("ALL VALUES:", debug_list)
-
-    #     # # 2) replace the original with the untouched clone
-    #     # kwargs['_result'] = live_iter
-
-    #     print_red(f"DEBUG values of generator {generator}")
-    #     for item in debug_iter:
-    #         print_red(f"item: {item}")
-
-        # return live_iter
-
-
-    # patch(
-    #     'keri.db.koming.KomerBase.getItemIter',
-    #     callback=lambda *args, **kwargs: dump_generator_non_destructive(kwargs['_result']),
-    #     # callback=lambda *args, **kwargs: print_red(f"URLs: {kwargs['_result']}"),
-    #     append=True
-    # )
-
-    # patch(
-    #     'keri.app.habbing.BaseHab.fetchUrls',
-    #     callback=lambda *args, **kwargs: print_red(f"URLs: {kwargs['_result']}"),
-    #     append=True
-    # )
-
-    # patch(
-    #     'keri.app.indirecting.MailboxDirector.processPollIter',
-    #     callback=lambda *args, **kwargs: dump_generator_non_destructive(kwargs['_result']),
-    #     append=True
-    # )
-
-
 def monkey_patch_http_stream_messenger():
     from keri.app.agenting import HTTPStreamMessenger
 
