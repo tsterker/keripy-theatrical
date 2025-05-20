@@ -6,6 +6,8 @@ The package where keripy-theatrical is "installed" into is referred to as the "t
 
 Note that the host project does not need to be the `keripy` package itself, but it could be any project utilizing `keripy` as a dependency.
 
+> ![Theatrical Output Screenshot](./docs/screenshot.png)
+
 ## Installation
 
 In order to use this package, you need install it into an existing project that uses `keripy`.
