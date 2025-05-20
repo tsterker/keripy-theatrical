@@ -13,6 +13,12 @@ def mark_patched(module):
 
 def init():
     register_global_error_handler()
+
+    # Apply patchers within ./src/keripy_theatrical/patchers that should implement a `apply_patches` method.
+    apply_patchers()
+
+    # Add trace statements for all functions in the given namespaces.
+    # This include the place where the function was called from.
     add_tracing(
         namespaces=[
             'keri.app',
@@ -23,9 +29,18 @@ def init():
             # 'keri.app.oobiing.Oobiery.scoobiDo',
         ]
     )
-    apply_patches()
 
-def apply_patches():
+    # Tap given function for more detailed logging.
+    #
+    # You can chose to print the args before or after the call.
+    # If you print them before the call, any subsequent calls
+    # within our tapped function will be wrapped by the args
+    # output and the return value of your tapped function.
+    tap('keri.app.habbing.Habery.loadHabs', print_args_before_call=True)
+    tap('keri.app.habbing.Habery.reconfigure', print_args_before_call=False)
+    # tap('keri.app.agenting.HTTPStreamMessenger.recur')
+
+def apply_patchers():
 
     # Dynamically load all modules from the `patchers` namespace
     package = importlib.import_module('.patchers', __package__)
@@ -41,6 +56,9 @@ def apply_patches():
             utils.throw(f"No apply_patches method found for patcher: {module_name}")
 
 def register_global_error_handler():
+    """
+    NOTE: THis is currently WIP and probably not working.
+    """
     import sys
 
     utils.print_purple("Registering global error handler...")
@@ -160,7 +178,6 @@ def tap(fqn, print_args_before_call=True):
             utils.print_red(f"[ => Item: {item}")
             yield item
 
-
     def tapper(*args, **kwargs):
         # utils.print_dim(f"[TAP] {cls.__module__}.{cls.__name__}.{method_name} called with args: {args} and kwargs: {kwargs}")
 
@@ -187,31 +204,6 @@ def tap(fqn, print_args_before_call=True):
 
     setattr(cls, method_name, tapper)
     return method
-
-def patch(fqn, callback=None, append=False):
-    module, cls_name, method_name = fqn.rsplit('.', 2)
-    cls = getattr(importlib.import_module(module), cls_name)
-    method = getattr(cls, method_name)
-    # add_tracing_to_class(cls)
-
-    def cb(*args, **kwargs):
-        utils.print_dim(f"[PATCH] {cls.__module__}.{cls.__name__}.{method_name} called with args: {args} and kwargs: {kwargs}")
-        if callback:
-            callback(*args, **kwargs)
-        # else:
-        #     utils.print_dim(f"[PATCH] {cls.__module__}.{cls.__name__}.{method_name} called with args: {args} and kwargs: {kwargs}")
-
-    def wrapper(*args, **kwargs):
-        if not append:
-            cb(*args, **kwargs)
-            return method(*args, **kwargs)
-        else:
-            result = method(*args, **kwargs)
-            cb(*args, **kwargs, _result=result)
-            return result
-
-    setattr(cls, method_name, wrapper)
-
 
 def add_tracing_to_module(module, exclude_list=None):
     import inspect

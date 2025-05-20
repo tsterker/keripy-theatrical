@@ -1,9 +1,7 @@
 import importlib
 import json
 
-from keripy_theatrical.theatrical import patch, tap
 from keripy_theatrical.utils import log, print_blue, print_green, print_purple, print_cyan, print_red, print_dim, dump_caller, dump_call_stack, dump
-
 
 REQUEST_DUMP_MAX_BODY_LEN = 150
 DUMP_FULL_CALL_STACK = True
