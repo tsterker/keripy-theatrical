@@ -27,6 +27,7 @@ git clone git@github.com:WebOfTrust/keripy.git $KERI_PATH
 # Install theatrical into your KERI project
 cd $KERI_PATH
 uv pip install -e .
+uv pip install pip
 uv run bash $THEATRICAL_PATH/bin/install.sh
 
 # Confirm it's working by seeing the theatrical log output prefixed with 🎭
