@@ -1,6 +1,6 @@
 # Keripy Theatrical
 
-A hacky python and bash script suite to make [`keripy`](https://github.com/WebOfTrust/keripy) more "theatrical" by logging expressively and possibly even throwing exceptions when things don't go the h qppy pathwhen things don't go the happy path.
+A hacky python and bash script suite to make [`keripy`](https://github.com/WebOfTrust/keripy) more "theatrical" by logging expressively and possibly even throwing exceptions when things don't go the happy path.
 
 The package where keripy-theatrical is "installed" into is referred to as the "target" or the "host".
 
